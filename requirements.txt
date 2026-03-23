@@ -1,0 +1,11 @@
+# Pinned for Python 3.9 compatibility
+# pydantic v2 / pydantic-core require Python 3.10+; use pydantic v1 instead.
+fastapi==0.103.2
+uvicorn[standard]>=0.24.0
+xgboost>=1.7.0
+scikit-learn>=1.3.0
+pandas>=1.5.0
+numpy>=1.24.0
+joblib>=1.3.0
+pydantic==1.10.13
+typing-extensions>=4.5.0
