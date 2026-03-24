@@ -50,11 +50,12 @@ app.add_middleware(
 
 # ── Request / Response schemas ─────────────────────────────────────────────────
 class DemandRequest(BaseModel):
-    show_hour: int = Field(..., ge=0, le=23, description="Hour of day (0-23)")
-    day_of_week: int = Field(..., ge=0, le=6, description="0=Monday, 6=Sunday")
-    seat_occupancy_pct: float = Field(..., ge=0.0, le=1.0, description="Fraction of seats already booked (0-1)")
-    movie_popularity: float = Field(..., ge=0.0, le=1.0, description="Normalised popularity score (0-1)")
-    recent_bookings: int = Field(..., ge=0, description="Number of bookings in the last 60 minutes")
+    show_hour: float = Field(..., description="Hour of day")
+    day_of_week: float = Field(..., description="Day of week")
+    seat_occupancy_pct: float = Field(..., description="Occupancy fraction or pct")
+    movie_popularity: float = Field(..., description="Movie Popularity")
+    minutes_until_show: float = Field(60.0, description="Minutes until show")
+    recent_bookings: float = Field(0.0, description="Bookings in last 60m")
 
     class Config:
         json_schema_extra = {
@@ -106,13 +107,16 @@ def predict_demand(payload: DemandRequest):
     """
     try:
         features = [[
-            payload.show_hour,
-            payload.day_of_week,
-            payload.seat_occupancy_pct,
-            payload.movie_popularity,
-            payload.recent_bookings,
+            float(payload.show_hour),
+            float(payload.day_of_week),
+            float(payload.seat_occupancy_pct),
+            float(payload.movie_popularity),
+            float(payload.recent_bookings),
         ]]
-        raw_score = float(model.predict(features)[0])
+        if hasattr(model, 'predict_proba'):
+            raw_score = float(model.predict_proba(features)[0][1])
+        else:
+            raw_score = float(model.predict(features)[0])
         score = round(float(np.clip(raw_score, 0.0, 1.0)), 4)
 
         return DemandResponse(
